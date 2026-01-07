@@ -1,0 +1,47 @@
+# Default values for s3-sync-compress
+replicaCount: 3
+
+image:
+  repository: huynguyen260398/s3-sync-compress
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 80
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+nodeSelector:
+  test-nodes: "true"
+
+podAntiAffinity:
+  enabled: true
+  type: required  # Can be 'required' or 'preferred'
+
+# AWS S3 Configuration
+aws:
+  s3Bucket: "s3-sync-compress-bucket"
+  region: "ap-southeast-1"
+  accessKeyId: ""  # Set via --set aws.accessKeyId=YOUR_KEY
+  secretAccessKey: ""  # Set via --set aws.secretAccessKey=YOUR_SECRET
+
+# nginx Configuration
+nginx:
+  workerProcesses: 4
+  workerConnections: 1024
+
+# Health check configuration
+healthCheck:
+  enabled: true
+  initialDelaySeconds: 15
+  periodSeconds: 30
+  timeoutSeconds: 10
+  failureThreshold: 3
