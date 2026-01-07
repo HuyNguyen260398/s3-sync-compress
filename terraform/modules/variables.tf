@@ -22,7 +22,7 @@ variable "cluster_region" {
 variable "chart_path" {
   description = "Path to the Helm chart"
   type        = string
-  default     = "../../helm/s3-sync-compress"
+  default     = "../../helm"
 }
 
 variable "namespace" {
@@ -55,11 +55,6 @@ variable "image_tag" {
   default     = "latest"
 }
 
-variable "s3_bucket" {
-  description = "S3 bucket name for sync and compress"
-  type        = string
-}
-
 variable "aws_access_key_id" {
   description = "AWS Access Key ID for S3 operations"
   type        = string
@@ -78,11 +73,31 @@ variable "aws_region" {
   default     = "ap-southeast-1"
 }
 
+variable "s3_bucket" {
+  description = "S3 bucket name for sync and compress"
+  type        = string
+}
+
+variable "s3_prefix" {
+  description = "S3 prefix of the defined bucket"
+  type        = string
+}
+
+variable "s3_output_bucket" {
+  description = "S3 output bucket name for sync and compress results"
+  type        = string
+}
+
+variable "s3_output_prefix" {
+  description = "S3 output prefix of the defined output bucket"
+  type        = string
+}
+
 variable "pod_anti_affinity_type" {
   description = "Pod anti-affinity type: 'required' or 'preferred'"
   type        = string
   default     = "preferred"
-  
+
   validation {
     condition     = contains(["required", "preferred"], var.pod_anti_affinity_type)
     error_message = "pod_anti_affinity_type must be either 'required' or 'preferred'."
@@ -93,7 +108,7 @@ variable "service_type" {
   description = "Kubernetes Service type"
   type        = string
   default     = "ClusterIP"
-  
+
   validation {
     condition     = contains(["ClusterIP", "NodePort", "LoadBalancer"], var.service_type)
     error_message = "service_type must be one of: ClusterIP, NodePort, or LoadBalancer."

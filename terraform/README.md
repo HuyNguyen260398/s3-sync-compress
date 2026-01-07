@@ -54,9 +54,12 @@ module "s3_sync_compress" {
 | `cluster_endpoint` | Endpoint of the EKS cluster | `string` | - | yes |
 | `cluster_ca_certificate` | CA certificate of the EKS cluster | `string` | - | yes |
 | `cluster_region` | AWS region of the EKS cluster | `string` | - | yes |
-| `s3_bucket` | S3 bucket name for sync and compress | `string` | - | yes |
 | `aws_access_key_id` | AWS Access Key ID | `string` | - | yes |
 | `aws_secret_access_key` | AWS Secret Access Key | `string` | - | yes |
+| `s3_bucket` | S3 bucket name for sync and compress | `string` | - | yes |
+| `s3_prefix` | S3 prefix of the defined bucket | `string` | - | yes |
+| `s3_output_bucket` | S3 output bucket name for sync and compress results | `string` | - | yes |
+| `s3_output_prefix` | S3 output prefix of the defined output bucket | `string` | - | yes |
 | `chart_path` | Path to the Helm chart | `string` | `../../helm/s3-sync-compress` | no |
 | `namespace` | Kubernetes namespace to deploy to | `string` | `default` | no |
 | `release_name` | Helm release name | `string` | `s3-sync-compress` | no |
