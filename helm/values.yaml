@@ -26,17 +26,14 @@ podAntiAffinity:
   enabled: true
   type: required  # Can be 'required' or 'preferred'
 
-# AWS S3 Configuration
 aws:
   s3Bucket: "s3-sync-compress-bucket"
+  s3Prefix: ""
+  s3OutputBucket: "s3-sync-compress-bucket-results"
+  s3OutputPrefix: ""
   region: "ap-southeast-1"
-  accessKeyId: ""  # Set via --set aws.accessKeyId=YOUR_KEY
-  secretAccessKey: ""  # Set via --set aws.secretAccessKey=YOUR_SECRET
-
-# nginx Configuration
-nginx:
-  workerProcesses: 4
-  workerConnections: 1024
+  accessKeyId: ""
+  secretAccessKey: ""
 
 # Health check configuration
 healthCheck:

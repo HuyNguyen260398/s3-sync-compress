@@ -64,10 +64,12 @@ spec:
               value: "{{ .Values.aws.secretAccessKey }}"
             - name: S3_BUCKET
               value: "{{ .Values.aws.s3Bucket }}"
-            - name: NGINX_WORKER_PROCESSES
-              value: "{{ .Values.nginx.workerProcesses }}"
-            - name: NGINX_WORKER_CONNECTIONS
-              value: "{{ .Values.nginx.workerConnections }}"
+            - name: S3_PREFIX
+              value: "{{ .Values.aws.s3Prefix }}"
+            - name: S3_OUTPUT_BUCKET
+              value: "{{ .Values.aws.s3OutputBucket }}"
+            - name: S3_OUTPUT_PREFIX
+              value: "{{ .Values.aws.s3OutputPrefix }}"
           {{- if .Values.healthCheck.enabled }}
           livenessProbe:
             httpGet:
