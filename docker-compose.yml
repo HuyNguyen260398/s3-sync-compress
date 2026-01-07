@@ -1,0 +1,37 @@
+version: "3.8"
+
+services:
+  s3-sync-web:
+    build: .
+    container_name: s3-sync-web-service
+    ports:
+      - "8080:80"
+    environment:
+      - S3_BUCKET=${S3_BUCKET:-test-bucket}
+      - S3_PREFIX=${S3_PREFIX:-}
+      - S3_OUTPUT_BUCKET=${S3_OUTPUT_BUCKET:-test-bucket}
+      - S3_OUTPUT_PREFIX=${S3_OUTPUT_PREFIX:-synced-files}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-ap-southeast-1}
+      - AUTO_RUN_SYNC=false
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    volumes:
+      # Optional: Mount for persistent storage
+      - ./output:/app/output:rw
+    networks:
+      - s3-sync-network
+
+networks:
+  s3-sync-network:
+    driver: bridge
+
+# Optional: Keep volume for external storage if needed
+volumes:
+  output_data:

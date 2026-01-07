@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S3 Sync & Compress Service</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .control-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-left: 4px solid #667eea;
+        }
+        .status-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .file-list {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-right: 10px;
+        }
+        .status-completed { background-color: #d4edda; color: #155724; }
+        .status-starting { background-color: #fff3cd; color: #856404; }
+        .status-error { background-color: #f8d7da; color: #721c24; }
+        .status-syncing { background-color: #cfe2ff; color: #084298; }
+        .status-compressing { background-color: #e2e3e5; color: #383d41; }
+        .status-uploading { background-color: #cff4fc; color: #055160; }
+        .status-running { background-color: #cfe2ff; color: #084298; }
+        
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-primary {
+            background: #28a745;
+        }
+        .btn-primary:hover {
+            background: #218838;
+        }
+        .btn-primary:disabled {
+            background: #6c757d;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        .download-link {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .download-link:hover {
+            text-decoration: underline;
+        }
+        .download-btn {
+            background: #28a745;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            text-decoration: none;
+            display: inline-block;
+            margin: 5px 0;
+        }
+        .download-btn:hover {
+            background: #218838;
+            text-decoration: none;
+        }
+        .section-title {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success-box {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            color: #155724;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚀 S3 Sync & Compress Service</h1>
+        <p>Automated file synchronization from AWS S3 with single-file compression</p>
+    </div>
+    
+    <div class="control-panel">
+        <h2>🎮 Control Panel</h2>
+        <button class="btn btn-primary" onclick="startSync()" id="startBtn">
+            ▶ Start Sync & Compress
+        </button>
+        <button class="btn" onclick="refreshStatus()">
+            🔄 Refresh Status
+        </button>
+        <span id="syncStatus" style="margin-left: 20px;"></span>
+    </div>
+
+    <div class="status-card">
+        <h2>📊 Service Status</h2>
+        <div id="status-content">
+            <p>Loading status...</p>
+        </div>
+    </div>
+
+    <div id="downloadSection" style="display:none;">
+        <div class="success-box">
+            <h3>✅ Download Your Zip File</h3>
+            <p>Your files have been successfully compressed and uploaded to S3.</p>
+            <p><strong>Filename:</strong> <span id="zipFilename"></span></p>
+            <p><strong>Size:</strong> <span id="zipSize"></span></p>
+            <p><a class="download-btn" href="" id="downloadLink" target="_blank">⬇️ Download Zip File</a></p>
+            <p><small>Link expires in 24 hours</small></p>
+        </div>
+    </div>
+
+    <div class="file-list">
+        <h2>📁 Processed Files</h2>
+        <div id="file-content">
+            <p>Start the sync process to see files...</p>
+        </div>
+    </div>
+
+    <script>
+        let isSyncing = false;
+        let pollInterval;
+
+        async function startSync() {
+            if (isSyncing) {
+                alert('Sync already in progress. Please wait...');
+                return;
+            }
+
+            const startBtn = document.getElementById('startBtn');
+            const syncStatus = document.getElementById('syncStatus');
+            
+            startBtn.disabled = true;
+            isSyncing = true;
+            syncStatus.innerHTML = '<div class="loader"></div>Initializing sync...';
+
+            try {
+                // Start the sync process
+                const response = await fetch('/api/start-sync', {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    syncStatus.innerHTML = '<div class="loader"></div>Sync process started...';
+                    
+                    // Start polling for updates
+                    pollInterval = setInterval(async () => {
+                        await loadStatus();
+                    }, 3000); // Poll every 3 seconds
+                    
+                    // Stop polling after 1 hour (safety measure)
+                    setTimeout(() => {
+                        if (pollInterval) {
+                            clearInterval(pollInterval);
+                            isSyncing = false;
+                            startBtn.disabled = false;
+                        }
+                    }, 3600000);
+                } else {
+                    throw new Error('Failed to start sync process');
+                }
+            } catch (error) {
+                syncStatus.innerHTML = `<span style="color: red;">Error: ${error.message}</span>`;
+                startBtn.disabled = false;
+                isSyncing = false;
+            }
+        }
+
+        async function loadStatus() {
+            try {
+                const response = await fetch('/status');
+                const status = await response.json();
+                
+                let statusClass = 'status-' + status.status;
+                let statusContent = `
+                    <div class="status-badge ${statusClass}">${status.status}</div>
+                    <table>
+                        <tr><td><strong>Status:</strong></td><td>${status.status}</td></tr>
+                        <tr><td><strong>Files Synced:</strong></td><td>${status.files_synced}</td></tr>
+                        <tr><td><strong>Files Compressed:</strong></td><td>${status.files_compressed}</td></tr>
+                        <tr><td><strong>Message:</strong></td><td>${status.message}</td></tr>
+                        <tr><td><strong>Last Updated:</strong></td><td>${new Date(status.timestamp).toLocaleString()}</td></tr>
+                    </table>
+                `;
+                
+                // Check if process is complete
+                if (status.status === 'completed') {
+                    const startBtn = document.getElementById('startBtn');
+                    startBtn.disabled = false;
+                    isSyncing = false;
+                    
+                    if (pollInterval) {
+                        clearInterval(pollInterval);
+                    }
+                    
+                    // Show download section if zip_info is available
+                    if (status.zip_info && status.zip_info.download_url) {
+                        showDownloadSection(status.zip_info);
+                    }
+                    
+                    document.getElementById('syncStatus').innerHTML = '✅ Sync completed!';
+                } else if (status.status === 'error') {
+                    const startBtn = document.getElementById('startBtn');
+                    startBtn.disabled = false;
+                    isSyncing = false;
+                    
+                    if (pollInterval) {
+                        clearInterval(pollInterval);
+                    }
+                    
+                    document.getElementById('syncStatus').innerHTML = '❌ Sync failed!';
+                }
+                
+                document.getElementById('status-content').innerHTML = statusContent;
+            } catch (error) {
+                document.getElementById('status-content').innerHTML = `
+                    <div class="status-badge status-error">Error</div>
+                    <p>Could not load status information: ${error.message}</p>
+                `;
+            }
+        }
+
+        function showDownloadSection(zipInfo) {
+            const downloadSection = document.getElementById('downloadSection');
+            document.getElementById('zipFilename').textContent = zipInfo.filename;
+            document.getElementById('zipSize').textContent = formatBytes(zipInfo.size);
+            document.getElementById('downloadLink').href = zipInfo.download_url;
+            downloadSection.style.display = 'block';
+        }
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        async function loadFiles() {
+            try {
+                const response = await fetch('/');
+                const html = await response.text();
+                
+                // Parse the nginx autoindex page
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const links = doc.querySelectorAll('a');
+                
+                let fileTable = '<table><tr><th>📄 Filename</th><th>📊 Type</th><th>📦 Size</th></tr>';
+                let fileCount = 0;
+                
+                links.forEach(link => {
+                    const href = link.getAttribute('href');
+                    if (href && href !== '../' && !href.startsWith('/') && href !== 'status' && href !== 'health') {
+                        fileCount++;
+                        const filename = href;
+                        const isZip = filename.endsWith('.zip');
+                        const fileType = isZip ? 'Compressed Archive' : 'Status File';
+                        const icon = isZip ? '📦' : '📋';
+                        
+                        fileTable += `<tr><td>${icon} ${filename}</td><td>${fileType}</td><td>-</td></tr>`;
+                    }
+                });
+                
+                fileTable += '</table>';
+                
+                if (fileCount === 0) {
+                    document.getElementById('file-content').innerHTML = '<p>No files available yet. Start the sync process to begin.</p>';
+                } else {
+                    document.getElementById('file-content').innerHTML = fileTable;
+                }
+                
+            } catch (error) {
+                document.getElementById('file-content').innerHTML = `
+                    <p>Could not load file list: ${error.message}</p>
+                `;
+            }
+        }
+
+        function refreshStatus() {
+            loadStatus();
+            loadFiles();
+        }
+
+        // Load initial data
+        loadStatus();
+        loadFiles();
+    </script>
+</body>
+</html>
