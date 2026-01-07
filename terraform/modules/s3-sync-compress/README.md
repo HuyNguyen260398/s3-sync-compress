@@ -88,10 +88,6 @@ module "s3_sync_compress" {
 | `service_name` | Name of the Kubernetes Service |
 | `pods_selector_labels` | Labels used to select the pods |
 
-## Example
-
-See the `examples/` directory for a complete example of how to use this module with actual EKS cluster data.
-
 ## Notes
 
 - AWS credentials must have permissions for S3 bucket operations
